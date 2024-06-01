@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang=en>
+  <head>
+    <title>{{ title }}</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark" />
+    <link rel="stylesheet" href="css/pico.classless.amber.min.css" />
+  </head>
+  <body>
+    <h1>Tekken 8 Frame Data</h1>
+    <h2>{{ displayCharacter }}</h2>
+    <table>
+        <thead>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Input</th>
+            <th scope="col">Hit Level</th>
+            <th scope="col">Damage</th>
+            <th scope="col">Startup</th>
+            <th scope="col">Block</th>
+            <th scope="col">Hit</th>
+            <th scope="col">Counter</th>
+            <th scope="col">Note</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in data %}
+          <tr>
+            <th scope="row">{{ row.name }}</th>
+            <td>{{ row.input }}</td>
+            <td>{{ row.hit_level }}</td>
+            <td>{{ row.damage }}</td>
+            <td>{{ row.startup }}</td>
+            <td>{{ row.block }}</td>
+            <td>{{ row.hit }}</td>
+            <td>{{ row.counter }}</td>
+            <td>{{ row.note }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      
+  </body>
+</html>
