@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang=en>
+  <head>
+    <title>Tekken 8 Frame Data - Home</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark" />
+    <link rel="stylesheet" href="css/pico.classless.amber.min.css" />
+  </head>
+  <body>
+    <h1>Tekken 8 Frame Data</h1>
+    <ul>
+    {% for row in data %}
+        <li><a href="/{{row.url}}">{{row.name}}</a></li>
+    {% endfor %}
+  </ul>
+  </body>
+</html>

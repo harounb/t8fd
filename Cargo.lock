@@ -346,6 +346,7 @@ dependencies = [
 name = "t8fd"
 version = "0.1.0"
 dependencies = [
+ "serde",
  "serde_json",
  "tera",
 ]

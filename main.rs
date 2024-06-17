@@ -1,4 +1,5 @@
 use serde_json;
+use serde::{Deserialize, Serialize};
 use std::process::Command;
 use std::{fs, io, path::Path};
 use tera::{Context, Tera};
@@ -10,6 +11,12 @@ struct Character {
     id: String,
     name: String,
     moves: serde_json::Value,
+}
+
+#[derive(Serialize, Deserialize)]
+struct CharacterLink {
+    url: String,
+    name: String
 }
 
 fn to_character_name(str: &str) -> String {
@@ -55,6 +62,7 @@ fn parse_frame_data() -> Vec<Character> {
 
 fn build_templates() {
     let characters = parse_frame_data();
+    let mut character_links: Vec<CharacterLink> = Vec::new();
     let tera = match Tera::new("templates/**/*.html") {
         Ok(t) => t,
         Err(e) => {
@@ -64,16 +72,32 @@ fn build_templates() {
     };
 
     // Render character pages
-    for character in characters {
+    for character in &characters {
         let mut context = Context::new();
         context.insert("data", &character.moves);
         context.insert("name", &character.name);
         let output_file_path = "build/".to_owned() + &character.id + &".html";
         let rendered = tera
-            .render("page.html", &context)
-            .expect("rendering failed");
+            .render("[character].html", &context)
+            .expect("Character page rendering failed");
         fs::write(&output_file_path, rendered).expect("Character page write failed");
     }
+
+    let mut context = Context::new();
+    // Render index page
+    for character in characters {
+        let character_link = CharacterLink {
+            url: String::from("") + &character.id,
+            name: character.name
+        };
+        character_links.push(character_link)
+
+    }
+    context.insert("data", &character_links);
+    let rendered = tera
+    .render("index.html", &context)
+    .expect("Index page rendering failed");
+        fs::write("build/index.html", rendered).expect("Index page write failed");
 
     copy_dir_all("static", "build").expect("Static dir copy failed");
 }
