@@ -1,11 +1,13 @@
-use serde_json;
 use serde::{Deserialize, Serialize};
-use std::process::Command;
+use serde_json;
+use std::process::{exit, Command};
 use std::{fs, io, path::Path};
 use tera::{Context, Tera};
 
+const DATA_DIR: &str = "data";
+const TEKKEN_8_DATA_DIRECTORY: &str = "data/TekkenFramedataAPI/src/__data/tekken8";
+const BUILD_FOLDER: &str = "build";
 const REPO_URL: &str = "https://github.com/FrostemanNeogard/TekkenFramedataAPI.git";
-const DATA_DIR: &str = "data/TekkenFramedataAPI/src/__data/tekken8";
 
 struct Character {
     id: String,
@@ -16,12 +18,12 @@ struct Character {
 #[derive(Serialize, Deserialize)]
 struct CharacterLink {
     url: String,
-    name: String
+    name: String,
 }
 
 fn to_character_name(str: &str) -> String {
     let mut last_char_was_space = true;
-    let mut chars:Vec<char> = Vec::new();
+    let mut chars: Vec<char> = Vec::new();
     for char in str.chars() {
         if last_char_was_space {
             chars.push(char.to_ascii_uppercase());
@@ -35,8 +37,7 @@ fn to_character_name(str: &str) -> String {
 
 fn parse_frame_data() -> Vec<Character> {
     let mut characters: Vec<Character> = Vec::new();
-    let dirs =
-        fs::read_dir(DATA_DIR).expect("failed to read dir");
+    let dirs = fs::read_dir(TEKKEN_8_DATA_DIRECTORY).expect("failed to read dir");
     for file in dirs {
         let file_path_buf = file.expect("File not found").path();
         let file_path = file_path_buf.as_path();
@@ -76,7 +77,7 @@ fn build_templates() {
         let mut context = Context::new();
         context.insert("data", &character.moves);
         context.insert("name", &character.name);
-        let output_file_path = "build/".to_owned() + &character.id + &".html";
+        let output_file_path = String::from("") + BUILD_FOLDER + &character.id + &".html";
         let rendered = tera
             .render("[character].html", &context)
             .expect("Character page rendering failed");
@@ -88,31 +89,32 @@ fn build_templates() {
     for character in characters {
         let character_link = CharacterLink {
             url: String::from("") + &character.id,
-            name: character.name
+            name: character.name,
         };
         character_links.push(character_link)
-
     }
     context.insert("data", &character_links);
     let rendered = tera
-    .render("index.html", &context)
-    .expect("Index page rendering failed");
-        fs::write("build/index.html", rendered).expect("Index page write failed");
+        .render("index.html", &context)
+        .expect("Index page rendering failed");
+    fs::write(String::from("") + BUILD_FOLDER + "/index.html", rendered)
+        .expect("Index page write failed");
 
-    copy_dir_all("static", "build").expect("Static dir copy failed");
+    copy_dir_all("static", BUILD_FOLDER).expect("Static dir copy failed");
 }
 
 fn pull_latest_frame_data() {
-    let _ = fs::remove_dir_all("data/");
-    let _ = fs::create_dir("data/");
-     Command::new("git")
+    let _ = fs::remove_dir_all(DATA_DIR);
+    let _ = fs::create_dir(DATA_DIR);
+    Command::new("git")
         .arg("clone")
         .arg("--depth=1")
         .arg(REPO_URL)
-        .current_dir("data/")
+        .current_dir(DATA_DIR)
         .spawn()
         .expect("git clone failed")
-        .wait().expect("git clone never ran");
+        .wait()
+        .expect("git clone never ran");
 }
 
 // https://stackoverflow.com/a/65192210
@@ -132,11 +134,13 @@ fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> io::Result<()> 
 
 fn main() {
     let cmd = std::env::args().nth(1).expect("no command given");
-    if cmd == "build" {
-        build_templates();
-    } else if cmd == "pull" {
-        pull_latest_frame_data();
-    } else {
-        print!("invalid command")
+
+    match cmd.as_str() {
+        "build" => build_templates(),
+        "pull" => pull_latest_frame_data(),
+        _ => {
+            eprintln!("invalid command");
+            exit(1);
+        }
     }
 }
